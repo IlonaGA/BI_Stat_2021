@@ -1,0 +1,363 @@
+---
+title: "Project 1, Bioinformatics Institute, Statistics and R"
+author: "Alexandra Gorbonos"
+date: "6.11.2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## Description
+
+This project is the part of course "Statistics and R" in BI. The idea of the this project is to practice standard R functions and calculating some stats using data from the Olympic Games for the last 120 years.
+
+## Task 1, Uploading files
+
+Data is divided into several parts, we need to bind them.
+
+```{r}
+read_files <- function(path)
+{
+  total_path <- paste(getwd(), path, sep='')
+  file_list <- list.files(path=total_path)
+  dataset <- data.frame()
+  print(file_list)
+  for (i in 1:length(file_list)){
+    temp_data <- read.csv(paste(total_path, file_list[i], sep="")) 
+    dataset <- rbind(dataset, temp_data)
+  }
+  dataset
+}
+
+
+dataset <- read_files('/data_folder/')
+```
+
+## Task 2, Check data
+We can use the command below to explore data:
+```{r}
+str(dataset)
+```
+
+Such variables as 'Height', 'Weight', 'Age' contain NA. To deal with NA in 'Height' and 'Weight' I decided to replace it with mean value, this solution was chosen to avoid missing large amount of data. In 'Age' column just a little part of table was NA, so I dropped it.
+```{r}
+dataset_without_NA <- dataset
+mean_h <- mean(dataset_without_NA$Height[is.na(dataset_without_NA$Height) == FALSE])
+dataset_without_NA$Height[is.na(dataset_without_NA$Height)] <- mean_h
+
+mean_w <- mean(dataset_without_NA$Weight[is.na(dataset_without_NA$Weight) == FALSE])
+dataset_without_NA$Weight[is.na(dataset_without_NA$Weight)] <- mean_w
+
+dataset_without_NA <- dataset_without_NA[is.na(dataset_without_NA$Age) == FALSE,]
+```
+
+## Task 3, Where I need to find the youngest sportsmen (Male/Female) in the Olimpic Games, 1992
+
+To check data i used: 
+```{r}
+check_s <- unique(dataset_without_NA$Sex)
+print(check_s)
+```
+On this step I found one more problem with data: one participant has "G" in Sex column, so I googled this person and realized that he is male.
+
+```{r}
+dataset_without_NA$Sex[dataset_without_NA$Sex == 'G'] <- 'M'
+```
+
+To find the youngest sportsmen:
+```{r}
+M_data <- dataset_without_NA[dataset_without_NA$Sex == 'M',]
+M_data[M_data$Age == min(M_data$Age),]
+
+F_data <- dataset_without_NA[dataset_without_NA$Sex == 'F',]
+F_data[F_data$Age == min(F_data$Age),]
+```
+
+## Task 4, Count mean and standart deviation for males and females height
+
+I used dataframes from task 4 and mean/sd functions. 
+```{r}
+mean(M_data$Height)
+sd(M_data$Height)
+
+mean(F_data$Height)
+sd(F_data$Height)
+```
+
+## Task 5, Count mean and standart deviation for females who played tennis in 2000
+
+```{r}
+mean(F_data$Height[(F_data$Year == 2000) & (F_data$Sport == 'Tennis')])
+sd(F_data$Height[(F_data$Year == 2000) & (F_data$Sport == 'Tennis')])
+```
+
+## Task 6, Find the player with the heaviest weight in 2006, define the sport he participated in
+
+```{r}
+weights_2006 <- M_data$Weight[(M_data$Year == 2006)]
+weights_2006 <- weights_2006[is.na(weights_2006) == FALSE]
+
+M_data[(M_data$Weight == max(weights_2006)) & (M_data$Year == 2006), ]
+```
+
+## Task 7, The number of golden medals won by females on the period from  1980 to 2010
+
+```{r}
+F_data_medal <- F_data[is.na(F_data$Medal) == FALSE,]
+F_data_medal <- F_data_medal[F_data_medal$Medal == 'Gold',]
+F_data_medal <- F_data_medal[(F_data_medal$Year >= 1980) & (F_data_medal$Year <= 2010),]
+sum((F_data_medal$Year >= 1980) & (F_data_medal$Year <= 2010))
+```
+
+## Task 8, How many times did John Aalberg participat in Olympic games in different years
+```{r}
+data_years <- dataset_without_NA[dataset_without_NA$Name == 'John Aalberg',]
+years <- unique(dataset_without_NA$Year[dataset_without_NA$Name == 'John Aalberg'])
+for (i in 1:length(years)){
+  print(c(years[i], sum(data_years$Year == years[i])))
+}
+```
+
+## Task 9, Count the numper of participants in different age groups
+
+Possible age groups: [15-25), [25-35), [35-45), [45-55].
+```{r}
+dataset_without_NA_2008 <-  dataset_without_NA[dataset_without_NA$Year == 2008,]
+
+data_15_25 <- dataset_without_NA_2008[dataset_without_NA_2008$Age >= 15 & dataset_without_NA_2008$Age < 25,]
+print(length(unique(data_15_25$Name)))
+
+data_25_35 <- dataset_without_NA_2008[dataset_without_NA_2008$Age >= 25 & dataset_without_NA_2008$Age < 35,]
+print(length(unique(data_25_35$Name)))
+
+data_35_45 <- dataset_without_NA_2008[dataset_without_NA_2008$Age >= 35 & dataset_without_NA_2008$Age < 45,]
+print(length(unique(data_35_45$Name)))
+
+data_45_55 <- dataset_without_NA_2008[dataset_without_NA_2008$Age >= 45 & dataset_without_NA_2008$Age <= 55,]
+print(length(unique(data_45_55$Name)))
+```
+
+## Task10, The differense in number of sports between 1994 and 2002
+
+```{r}
+dataset_without_NA_2002 <-  dataset_without_NA[dataset_without_NA$Year == 2002,]
+dataset_without_NA_1994 <-  dataset_without_NA[dataset_without_NA$Year == 1994,]
+
+difference <- length(unique(dataset_without_NA_2002$Sport)) - length(unique(dataset_without_NA_1994$Sport))
+print(difference)
+```
+
+## Task11, Top 3 countries for each kind of medal (Gold/Silver/Bronze)
+
+Separately for the winter and summer olympics
+
+Summer:
+```{r}
+country_list <- c()
+medals_amount <- c()
+Summer <- dataset_without_NA[dataset_without_NA$Season == 'Summer',]
+Countries <- unique(Summer$Team)
+Summer <- Summer[!is.na(Summer$Medal), ]
+for (country in Countries){
+  
+  country_list <- c(country_list, country)
+  medals_amount <- c(medals_amount, sum(Summer$Team == country & Summer$Medal == 'Gold'))
+}
+summer_gold <- data.frame(country_list, medals_amount)
+summer_gold <- summer_gold[order(-medals_amount),]
+head(summer_gold, 3)
+```
+
+```{r}
+country_list <- c()
+medals_amount <- c()
+Summer <- dataset_without_NA[dataset_without_NA$Season == 'Summer',]
+Countries <- unique(Summer$Team)
+Summer <- Summer[!is.na(Summer$Medal), ]
+for (country in Countries){
+  
+  country_list <- c(country_list, country)
+  medals_amount <- c(medals_amount, sum(Summer$Team == country & Summer$Medal == 'Silver'))
+}
+summer_silver <- data.frame(country_list, medals_amount)
+summer_silver <- summer_silver[order(-medals_amount),]
+head(summer_silver, 3)
+```
+
+```{r}
+country_list <- c()
+medals_amount <- c()
+Summer <- dataset_without_NA[dataset_without_NA$Season == 'Summer',]
+Countries <- unique(Summer$Team)
+Summer <- Summer[!is.na(Summer$Medal), ]
+for (country in Countries){
+  country_list <- c(country_list, country)
+  medals_amount <- c(medals_amount, sum(Summer$Team == country & Summer$Medal == 'Bronze'))
+}
+summer_bronze <- data.frame(country_list, medals_amount)
+summer_bronze <- summer_bronze[order(-medals_amount),]
+head(summer_bronze, 3)
+```
+
+Winter:
+```{r}
+country_list <- c()
+medals_amount <- c()
+Winter <- dataset_without_NA[dataset_without_NA$Season == 'Winter',]
+Countries <- unique(Winter$Team)
+Winter <- Winter[!is.na(Winter$Medal), ]
+for (country in Countries){
+  country_list <- c(country_list, country)
+  medals_amount <- c(medals_amount, sum(Winter$Team == country & Winter$Medal == 'Gold'))
+}
+winter_gold <- data.frame(country_list, medals_amount)
+winter_gold <- winter_gold[order(-medals_amount),]
+head(winter_gold, 3)
+```
+
+```{r}
+country_list <- c()
+medals_amount <- c()
+Winter <- dataset_without_NA[dataset_without_NA$Season == 'Winter',]
+Countries <- unique(Winter$Team)
+Winter <- Winter[!is.na(Winter$Medal), ]
+for (country in Countries){
+  country_list <- c(country_list, country)
+  medals_amount <- c(medals_amount, sum(Winter$Team == country & Winter$Medal == 'Silver'))
+}
+winter_silver <- data.frame(country_list, medals_amount)
+winter_silver <- winter_silver[order(-medals_amount),]
+head(winter_silver, 3)
+```
+
+```{r}
+country_list <- c()
+medals_amount <- c()
+Countries <- unique(Winter$Team)
+Winter <- Winter[!is.na(Winter$Medal), ]
+for (country in Countries){
+  country_list <- c(country_list, country)
+  medals_amount <- c(medals_amount, sum((Winter$Team == country) & (Winter$Medal == 'Bronze')))
+  print(c(country, sum((Winter$Team == country) & (Winter$Medal == 'Bronze'))))
+}
+winter_bronze <- data.frame(country_list, medals_amount)
+winter_bronze <- winter_bronze[order(-medals_amount),]
+head(winter_bronze, 3)
+```
+
+## Task 12, Height_z_scores
+
+```{r}
+dataset_without_NA$Height_z_scores <- scale(dataset_without_NA$Height)
+dataset_without_NA
+```
+
+## Task13, Min/Max normalization
+```{r}
+min_max_function <- function(x, na.rm = TRUE){
+  return((x- min(x)) / (max(x)-min(x)))
+}
+dataset_without_NA$Height_min_max_scaled <- min_max_function(dataset_without_NA$Height)
+```
+
+## Task 14, Comparing Height, Weight and Age of males and females in winter Olympiad Games
+
+#### Height
+Normality test:
+```{r}
+F_data_winter <- F_data[F_data$Season == 'Winter',]
+M_data_winter <- M_data[M_data$Season == 'Winter',]
+shapiro.test(F_data_winter$Height[0:5000])
+shapiro.test(M_data_winter$Height[0:5000])
+```
+
+Boxplot:
+```{r}
+FM_Height_boxplot <- ggplot(Winter, aes(x = as.factor(Sex), y=Height, group=Sex)) +
+  geom_boxplot() + 
+  scale_x_discrete(name = "Sex") +
+  labs(title = "Fig 1. Height boxplots for males and females.") +
+  theme_bw()
+FM_Height_boxplot
+```
+
+H0: Males and Females have equal height.
+H1: Males and Females have different height.
+```{r}
+t.test(x=F_data_winter$Height, y=M_data_winter$Height, alternative = c("two.sided"))
+```
+
+One more t test:
+H0: Males and Females have equal height.
+H1: Males are highter than females.
+```{r}
+t.test(x=F_data_winter$Height, y=M_data_winter$Height, alternative = c("less"))
+```
+
+
+#### Weight
+
+Normality test:
+```{r}
+shapiro.test(F_data_winter$Weight[0:5000])
+shapiro.test(M_data_winter$Weight[0:5000])
+```
+
+Boxplot:
+```{r}
+FM_Weight_boxplot <- ggplot(Winter, aes(x = as.factor(Sex), y=Weight, group=Sex)) +
+  geom_boxplot() + 
+  scale_x_discrete(name = "Sex") +
+  labs(title = "Fig 1. Weight boxplots for males and females.") +
+  theme_bw()
+FM_Weight_boxplot
+```
+
+H0: Males and Females have equal weight.
+H1: Males and Females have different weight.
+```{r}
+t.test(x=F_data_winter$Weight, y=M_data_winter$Weight, alternative = c("two.sided"))
+```
+
+One more t test:
+H0: Males and Females have equal weight.
+H1: Males have bigger weight than females.
+```{r}
+t.test(x=F_data_winter$Weight, y=M_data_winter$Weight, alternative = c("less"))
+```
+
+
+#### Age
+
+Normality test:
+```{r}
+shapiro.test(F_data_winter$Age[0:5000])
+shapiro.test(M_data_winter$Age[0:5000])
+```
+
+Boxplot:
+```{r}
+FM_Age_boxplot <- ggplot(Winter, aes(x = as.factor(Sex), y=Age, group=Sex)) +
+  geom_boxplot() + 
+  scale_x_discrete(name = "Sex") +
+  labs(title = "Fig 1. Age boxplots for males and females.") +
+  theme_bw()
+FM_Age_boxplot
+```
+
+H0: Males and Females have the same age.
+H1: Males and Females have different ages.
+```{r}
+t.test(x=F_data_winter$Age, y=M_data_winter$Age, alternative = c("two.sided"))
+```
+
+One more t test:
+H0: Males and Females have the same age.
+H1: Males are older than females.
+```{r}
+t.test(x=F_data_winter$Age, y=M_data_winter$Age, alternative = c("less"))
+```
+
