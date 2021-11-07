@@ -37,6 +37,7 @@ dataset <- read_files('/data_folder/')
 ```
 
 ## Task 2, Check data
+
 We can use the command below to explore data:
 ```{r}
 str(dataset)
@@ -113,6 +114,7 @@ sum((F_data_medal$Year >= 1980) & (F_data_medal$Year <= 2010))
 ```
 
 ## Task 8, How many times did John Aalberg participat in Olympic games in different years
+
 ```{r}
 data_years <- dataset_without_NA[dataset_without_NA$Name == 'John Aalberg',]
 years <- unique(dataset_without_NA$Year[dataset_without_NA$Name == 'John Aalberg'])
@@ -140,7 +142,7 @@ data_45_55 <- dataset_without_NA_2008[dataset_without_NA_2008$Age >= 45 & datase
 print(length(unique(data_45_55$Name)))
 ```
 
-## Task10, The differense in number of sports between 1994 and 2002
+## Task 10, The differense in number of sports between 1994 and 2002
 
 ```{r}
 dataset_without_NA_2002 <-  dataset_without_NA[dataset_without_NA$Year == 2002,]
@@ -150,7 +152,7 @@ difference <- length(unique(dataset_without_NA_2002$Sport)) - length(unique(data
 print(difference)
 ```
 
-## Task11, Top 3 countries for each kind of medal (Gold/Silver/Bronze)
+## Task 11, Top 3 countries for each kind of medal (Gold/Silver/Bronze)
 
 Separately for the winter and summer olympics
 
@@ -255,7 +257,8 @@ dataset_without_NA$Height_z_scores <- scale(dataset_without_NA$Height)
 dataset_without_NA
 ```
 
-## Task13, Min/Max normalization
+## Task 13, Min/Max normalization
+
 ```{r}
 min_max_function <- function(x, na.rm = TRUE){
   return((x- min(x)) / (max(x)-min(x)))
