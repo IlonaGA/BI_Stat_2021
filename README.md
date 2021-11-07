@@ -3,7 +3,7 @@
 This is an analysis of data collected from the Olympic games for 120 years. Data is presented in several .csv files.
   
 ### Data structure
-Presented data has several features:
+Presented data has several features:  
 **ID** – Unique number for each athlete  
 **Name** – Athlete's name  
 **Sex** – M or F  
